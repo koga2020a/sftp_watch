@@ -1,0 +1,14 @@
+host: "12.34.56.78"
+port: 22
+user: "aaa"
+#user: "bbb"
+password: "aaa"           # または下の pkey_base64
+#pkey_base64: ""
+auth_type: "password"            # または "pkey"
+#auth_type: "pkey"
+proxy_host: "proxy.test.com"
+proxy_port: 1234
+dirs:
+#  - "/export/home/www.kirin.co.jp-test-area/"
+  - "/test/"
+interval: 60

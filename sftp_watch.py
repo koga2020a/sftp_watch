@@ -11,7 +11,7 @@ import csv
 from paramiko import Transport, SFTPClient, RSAKey
 from stat import S_ISDIR
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # カラー出力（Git Bash 用）
 RESET = '\033[0m'
@@ -123,10 +123,27 @@ def write_logs_csv(changes):
         for row in changes:
             w.writerow(row)
 
-def write_display_log(timestamp, messages):
+def format_elapsed_time(seconds):
+    if seconds < 60:
+        return f"{seconds}秒"
+    elif seconds < 3600:
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f"{minutes}分{seconds}秒"
+    else:
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60
+        return f"{hours}時間{minutes}分{seconds}秒"
+
+def write_display_log(timestamp, messages, last_change_time=None):
     with open('display_log.txt', 'a', encoding='utf-8') as f:
         f.write(f"\n------------------\n")
-        f.write(f"-----  {timestamp}  変更検知  -----\n")
+        elapsed_str = ""
+        if last_change_time:
+            elapsed = (datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S') - last_change_time).total_seconds()
+            elapsed_str = f" (経過: {format_elapsed_time(int(elapsed))})"
+        f.write(f"-----  {timestamp}  変更検知{elapsed_str}  -----\n")
         for msg in messages:
             f.write(f"{msg}\n")
         f.write("\n")
@@ -180,6 +197,7 @@ def main():
     prev = {}
     prev_dirs = {}  # Store directory paths separately
     first = True
+    last_change_time = None
 
     try:
         while True:
@@ -274,7 +292,8 @@ def main():
 
                     # Write both CSV and display logs
                     write_logs_csv(changes)
-                    write_display_log(now, display_messages)
+                    write_display_log(now, display_messages, last_change_time)
+                    last_change_time = datetime.strptime(now, '%Y-%m-%d %H:%M:%S')
 
                     write_logs_csv(changes)
 

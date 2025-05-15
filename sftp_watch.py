@@ -238,7 +238,11 @@ def main():
                 
                 if added_files or removed_files or updated or date_only_changed or added_dirs or removed_dirs:
                     print("\n------------------")
-                    print(f"-----  {now}  変更検知  -----")
+                    elapsed_str = ""
+                    if last_change_time:
+                        elapsed = (datetime.strptime(now, '%Y-%m-%d %H:%M:%S') - last_change_time).total_seconds()
+                        elapsed_str = f" (経過: {format_elapsed_time(int(elapsed))})"
+                    print(f"-----  {now}  変更検知{elapsed_str}  -----")
 
                     changes = []
                     display_messages = []

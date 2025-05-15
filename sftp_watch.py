@@ -17,6 +17,8 @@ from datetime import datetime
 RESET = '\033[0m'
 BLUE = '\033[94m'
 WHITE = '\033[97m'
+CYAN = '\033[96m'  # 水色
+ORANGE = '\033[93m'  # オレンジ色
 
 def parse_args():
     parser = argparse.ArgumentParser(description='SFTP Directory Monitor with tree, color, logging')
@@ -240,24 +242,24 @@ def main():
                     # Report added files
                     for p in sorted(added_files):
                         m = current[p]
-                        msg = f"[ADD] {p} size={m['size']:,}"
+                        msg = f"{CYAN}[ADD] {p} size={m['size']:,}{RESET}"
                         print(msg)
-                        display_messages.append(msg)
+                        display_messages.append(msg.replace(CYAN, '').replace(RESET, ''))
                         changes.append([now, 'ADD', p, m['size']])
                     
                     # Report removed files
                     for p in sorted(removed_files):
                         m = prev[p]
-                        msg = f"[DEL] {p} was size={m['size']:,}"
+                        msg = f"{CYAN}[DEL] {p} was size={m['size']:,}{RESET}"
                         print(msg)
-                        display_messages.append(msg)
+                        display_messages.append(msg.replace(CYAN, '').replace(RESET, ''))
                         changes.append([now, 'DEL', p, m['size']])
                     
                     # Report modified files
                     for p in sorted(updated):
-                        msg = f"[MOD] {p} {prev[p]['size']:,} -> {current[p]['size']:,}"
+                        msg = f"{ORANGE}[MOD] {p} {prev[p]['size']:,} -> {current[p]['size']:,}{RESET}"
                         print(msg)
-                        display_messages.append(msg)
+                        display_messages.append(msg.replace(ORANGE, '').replace(RESET, ''))
                         changes.append([now, 'MOD', p, prev[p]['size'], current[p]['size']])
                         
                     # Report files with only date changes
@@ -265,9 +267,9 @@ def main():
                         old_time = datetime.fromtimestamp(prev[p]['mtime']).strftime('%Y-%m-%d %H:%M:%S')
                         new_time = datetime.fromtimestamp(current[p]['mtime']).strftime('%Y-%m-%d %H:%M:%S')
                         file_size = current[p]['size']
-                        msg = f"[DATEonly] {p} size={file_size:,} {old_time} -> {new_time}"
+                        msg = f"{ORANGE}[DATEonly] {p} size={file_size:,} {old_time} -> {new_time}{RESET}"
                         print(msg)
-                        display_messages.append(msg)
+                        display_messages.append(msg.replace(ORANGE, '').replace(RESET, ''))
                         changes.append([now, 'DATE', p, file_size, old_time, new_time])
 
                     # Write both CSV and display logs

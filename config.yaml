@@ -1,14 +1,14 @@
-host: "12.34.56.78"
+host: "35.73.90.190"
 port: 22
-user: "aaa"
+user: "kc-tweb-area"
 #user: "bbb"
-password: "aaa"           # または下の pkey_base64
-#pkey_base64: ""
-auth_type: "password"            # または "pkey"
+password: "your_password_here"    # 実際のパスワードを設定してください
+#pkey_base64: ""                  # 公開鍵認証は使用しないためコメントアウト
+auth_type: "password"            # パスワード認証を使用
 #auth_type: "pkey"
-proxy_host: "proxy.test.com"
-proxy_port: 1234
+proxy_host: "netsp.kirin.co.jp"
+proxy_port: 1480
 dirs:
 #  - "/export/home/www.kirin.co.jp-test-area/"
-  - "/test/"
+  - "/tmp/test/"
 interval: 60

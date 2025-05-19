@@ -329,7 +329,7 @@ def main():
             
             # キー入力チェック付きの待機処理
             if wait_for_interval(cfg['interval']):
-                print("\n[INFO] キーが押されました。更新を実行します...")
+                print(".")
                 continue
 
     finally:

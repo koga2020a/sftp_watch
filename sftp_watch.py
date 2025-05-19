@@ -320,7 +320,7 @@ def main():
                     write_display_log(now, display_messages, last_change_time)
                     last_change_time = datetime.strptime(now, '%Y-%m-%d %H:%M:%S')
 
-                    write_logs_csv(changes)
+                    write_s_csv(changes)
 
             write_logs_json(current)
             prev = current

@@ -70,6 +70,59 @@ python sftp_monitor.py
 python sftp_monitor.py --config my_config.yaml
 ```
 
+## 実行後の動作
+
+プログラムを実行すると、以下のような動作をします：
+
+1. 初回実行時：
+   - 設定されたディレクトリの構造をツリー形式で表示
+   - 各ファイルとディレクトリの初期状態を記録
+
+2. 監視開始後：
+   - 設定された間隔（デフォルト60秒）ごとにディレクトリをスキャン
+   - 変更を検出すると、リアルタイムで画面に表示
+   - 同時に3種類のログファイルに記録
+
+3. ログファイルの更新：
+   - `log.csv`: 変更が発生するたびに追記
+   - `log.json`: 最新の状態を上書き保存
+   - `display_log.txt`: 画面表示と同じ内容を追記
+
+4. 終了時：
+   - Ctrl+Cでプログラムを終了
+   - 終了時の状態が最終的なログとして記録
+
+### ログファイルの例
+
+#### log.csv
+```csv
+2024-03-20 10:00:00,ADD,/test/new_file.txt,1024
+2024-03-20 10:01:00,MOD,/test/existing.txt,2048,1024
+2024-03-20 10:02:00,DATE,/test/date_changed.txt,512,2024-03-19 15:00:00,2024-03-20 10:02:00
+```
+
+#### log.json
+```json
+{
+  "/test": {
+    "type": "directory",
+    "files": {
+      "new_file.txt": {
+        "size": 1024,
+        "mtime": "2024-03-20 10:00:00"
+      }
+    }
+  }
+}
+```
+
+#### display_log.txt
+```
+[2024-03-20 10:00:00] [ADD] /test/new_file.txt (1024 bytes)
+[2024-03-20 10:01:00] [MOD] /test/existing.txt (2048 bytes, was 1024 bytes)
+[2024-03-20 10:02:00] [DATEonly] /test/date_changed.txt (512 bytes)
+```
+
 ## 出力
 
 ### 画面表示

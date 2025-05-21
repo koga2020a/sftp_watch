@@ -8,6 +8,7 @@ import sys
 import socket
 import json
 import csv
+import re
 from paramiko import Transport, SFTPClient, RSAKey
 from stat import S_ISDIR
 from collections import defaultdict
@@ -201,20 +202,6 @@ def get_dir_paths(path_dict):
     """
     return {p.rstrip('/'): True for p in path_dict if path_dict[p]['is_dir']}
 
-def wait_for_interval(interval):
-    """
-    Wait for the specified interval, checking for key presses every 0.5 seconds.
-    Returns True if a key was pressed, False otherwise.
-    """
-    wait_time = 0
-    while wait_time < interval:
-        if msvcrt.kbhit():
-            msvcrt.getch()  # Clear the key press
-            return True
-        time.sleep(0.5)
-        wait_time += 0.5
-    return False
-
 def main():
     args = parse_args()
     cfg_path = args.config or 'config.yaml'
@@ -365,17 +352,13 @@ def main():
                     write_display_log(now, display_messages, last_change_time, string_colors)
                     last_change_time = datetime.strptime(now, '%Y-%m-%d %H:%M:%S')
 
-                    write_s_csv(changes)
+                    write_logs_csv(changes)
 
             write_logs_json(current)
             prev = current
             prev_dirs = current_dirs
             first = False
-            
-            # キー入力チェック付きの待機処理
-            if wait_for_interval(cfg['interval']):
-                print(".")
-                continue
+            time.sleep(cfg['interval'])
 
     finally:
         sftp.close()

@@ -8,6 +8,7 @@ import sys
 import socket
 import json
 import csv
+import re
 from paramiko import Transport, SFTPClient, RSAKey
 from stat import S_ISDIR
 from collections import defaultdict
@@ -19,6 +20,43 @@ BLUE = '\033[94m'
 WHITE = '\033[97m'
 CYAN = '\033[96m'  # 水色
 ORANGE = '\033[93m'  # オレンジ色
+RED = '\033[91m'    # 赤色
+GREEN = '\033[92m'  # 緑色
+YELLOW = '\033[93m' # 黄色
+MAGENTA = '\033[95m' # マゼンタ
+
+# 色のマッピング
+COLOR_MAP = {
+    'RED': RED,
+    'GREEN': GREEN,
+    'BLUE': BLUE,
+    'YELLOW': YELLOW,
+    'CYAN': CYAN,
+    'MAGENTA': MAGENTA,
+    'WHITE': WHITE,
+    'ORANGE': ORANGE
+}
+
+def apply_color_to_string(text, string_colors):
+    """
+    設定に基づいて文字列に色を適用する
+    """
+    if not string_colors:
+        return text
+
+    # 単純一致の処理
+    for match in string_colors.get('exact_matches', []):
+        if match['string'].lower() in text.lower():
+            color = COLOR_MAP.get(match['color'], WHITE)
+            return f"{color}{text}{RESET}"
+
+    # 正規表現の処理
+    for match in string_colors.get('regex_matches', []):
+        if re.search(match['pattern'], text):
+            color = COLOR_MAP.get(match['color'], WHITE)
+            return f"{color}{text}{RESET}"
+
+    return text
 
 def parse_args():
     parser = argparse.ArgumentParser(description='SFTP Directory Monitor with tree, color, logging')
@@ -136,16 +174,22 @@ def format_elapsed_time(seconds):
         seconds = seconds % 60
         return f"{hours}時間{minutes}分{seconds}秒"
 
-def write_display_log(timestamp, messages, last_change_time=None):
+def write_display_log(timestamp, messages, last_change_time=None, string_colors=None):
     with open('display_log.txt', 'a', encoding='utf-8') as f:
         f.write(f"\n------------------\n")
         elapsed_str = ""
         if last_change_time:
             elapsed = (datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S') - last_change_time).total_seconds()
             elapsed_str = f" (経過: {format_elapsed_time(int(elapsed))})"
-        f.write(f"-----  {timestamp}  変更検知{elapsed_str}  -----\n")
+        
+        # タイムスタンプに色を適用
+        colored_timestamp = apply_color_to_string(timestamp, string_colors)
+        f.write(f"-----  {colored_timestamp}  変更検知{elapsed_str}  -----\n")
+        
         for msg in messages:
-            f.write(f"{msg}\n")
+            # メッセージに色を適用
+            colored_msg = apply_color_to_string(msg, string_colors)
+            f.write(f"{colored_msg}\n")
         f.write("\n")
 
 def write_logs_json(state):
@@ -167,6 +211,9 @@ def main():
     cfg = load_config(cfg_path)
     if isinstance(cfg, dict) and 'default' in cfg:
         cfg = cfg['default']
+
+    # 文字列と色の設定を取得
+    string_colors = cfg.get('string_colors', {})
 
     for k in ('host','port','user','auth_type','dirs'):
         if k not in cfg:
@@ -302,7 +349,7 @@ def main():
 
                     # Write both CSV and display logs
                     write_logs_csv(changes)
-                    write_display_log(now, display_messages, last_change_time)
+                    write_display_log(now, display_messages, last_change_time, string_colors)
                     last_change_time = datetime.strptime(now, '%Y-%m-%d %H:%M:%S')
 
                     write_logs_csv(changes)

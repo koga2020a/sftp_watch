@@ -12,3 +12,25 @@ dirs:
 #  - "/export/home/www.kirin.co.jp-test-area/"
   - "/tmp/test/"
 interval: 60
+
+# 文字列と色の設定
+string_colors:
+  # 単純一致の設定
+  exact_matches:
+    - string: "/test/"
+      color: "RED"
+    - string: "/area/"
+      color: "RED"
+    - string: "/campaign/"
+      color: "GREEN"
+    - string: "/go/"
+      color: "CYAN"
+  
+  # 正規表現の設定
+  regex_matches:
+    - pattern: ".*\\.log$"
+      color: "CYAN"
+    - pattern: ".*\\.txt$"
+      color: "MAGENTA"
+    - pattern: ".*\\.csv$"
+      color: "BLUE"

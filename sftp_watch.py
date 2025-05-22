@@ -138,7 +138,7 @@ def list_files_recursive(sftp, directory):
         print(f"[ERROR] Listing failed in {directory}: {e}")
     return entries
 
-def print_tree(entries):
+def print_tree(entries, string_colors=None):
     tree = defaultdict(list)
     for p in sorted(entries):
         parts = p.strip('/').split('/')
@@ -150,10 +150,17 @@ def print_tree(entries):
             indent = '  ' * level
             name = p.rstrip('/').split('/')[-1]
             is_dir = entries[p]['is_dir']
-            color = BLUE if is_dir else WHITE
+            base_color = BLUE if is_dir else WHITE
             size = entries[p].get('size')
             size_str = '' if is_dir else f' size={size:,}'
-            print(f"{indent}{color}{name}{'/' if is_dir else ''}{size_str}{RESET}")
+            
+            # 基本の色を適用
+            colored_name = f"{base_color}{name}{RESET}"
+            if string_colors:
+                # config.yamlの設定を適用
+                colored_name = apply_color_to_string(colored_name, string_colors)
+            
+            print(f"{indent}{colored_name}{'/' if is_dir else ''}{size_str}")
             if is_dir:
                 _recurse(p.strip('/'), level+1)
 
@@ -262,7 +269,7 @@ def main():
 
             if first:
                 print(f"[INFO] Initial scan complete. {len(current)} entries:")
-                print_tree(current)
+                print_tree(current, string_colors)
                 print("-"*40)
             else:
                 # Process regular file changes
@@ -301,7 +308,8 @@ def main():
                     # Report added directories (only genuinely new ones)
                     for p in sorted(added_dirs):
                         name = p.rstrip('/').split('/')[-1]
-                        msg = f"{BLUE}[ADD]{RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
+                        base_msg = f"{BLUE}[ADD]{RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
+                        msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(BLUE, '').replace(RESET, ''))
                         changes.append([now, 'ADD_DIR', p + '/'])
@@ -309,7 +317,8 @@ def main():
                     # Report removed directories (only genuinely removed ones)
                     for p in sorted(removed_dirs):
                         name = p.rstrip('/').split('/')[-1]
-                        msg = f"{BLUE}[DEL]{RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
+                        base_msg = f"{BLUE}[DEL]{RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
+                        msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(BLUE, '').replace(RESET, ''))
                         changes.append([now, 'DEL_DIR', p + '/'])
@@ -318,7 +327,8 @@ def main():
                     for p in sorted(added_files):
                         m = current[p]
                         name = p.split('/')[-1]
-                        msg = f"{CYAN}[ADD]{RESET} {p.replace(name, '')}{CYAN}{name}{RESET} size={m['size']:,}"
+                        base_msg = f"{CYAN}[ADD]{RESET} {p.replace(name, '')}{CYAN}{name}{RESET} size={m['size']:,}"
+                        msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(CYAN, '').replace(RESET, ''))
                         changes.append([now, 'ADD', p, m['size']])
@@ -327,7 +337,8 @@ def main():
                     for p in sorted(removed_files):
                         m = prev[p]
                         name = p.split('/')[-1]
-                        msg = f"{CYAN}[DEL]{RESET} {p.replace(name, '')}{CYAN}{name}{RESET} was size={m['size']:,}"
+                        base_msg = f"{CYAN}[DEL]{RESET} {p.replace(name, '')}{CYAN}{name}{RESET} was size={m['size']:,}"
+                        msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(CYAN, '').replace(RESET, ''))
                         changes.append([now, 'DEL', p, m['size']])
@@ -335,7 +346,8 @@ def main():
                     # Report modified files
                     for p in sorted(updated):
                         name = p.split('/')[-1]
-                        msg = f"{ORANGE}[MOD]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} {prev[p]['size']:,} -> {current[p]['size']:,}"
+                        base_msg = f"{ORANGE}[MOD]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} {prev[p]['size']:,} -> {current[p]['size']:,}"
+                        msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(ORANGE, '').replace(RESET, ''))
                         changes.append([now, 'MOD', p, prev[p]['size'], current[p]['size']])
@@ -346,7 +358,8 @@ def main():
                         new_time = datetime.fromtimestamp(current[p]['mtime']).strftime('%Y-%m-%d %H:%M:%S')
                         file_size = current[p]['size']
                         name = p.split('/')[-1]
-                        msg = f"{ORANGE}[DATEonly]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} size={file_size:,} {old_time} -> {new_time}"
+                        base_msg = f"{ORANGE}[DATEonly]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} size={file_size:,} {old_time} -> {new_time}"
+                        msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(ORANGE, '').replace(RESET, ''))
                         changes.append([now, 'DATE', p, file_size, old_time, new_time])

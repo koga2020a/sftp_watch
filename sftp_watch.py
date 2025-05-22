@@ -39,22 +39,26 @@ COLOR_MAP = {
 
 def apply_color_to_string(text, string_colors):
     """
-    設定に基づいて文字列に色を適用する
+    設定に基づいて文字列中のマッチ部分だけに色を適用する
     """
     if not string_colors:
         return text
 
-    # 単純一致の処理
+    # 1) 単純一致の処理：部分文字列を赤くするなど
     for match in string_colors.get('exact_matches', []):
-        if match['string'].lower() in text.lower():
-            color = COLOR_MAP.get(match['color'], WHITE)
-            return f"{color}{text}{RESET}"
+        s = match['string']
+        color = COLOR_MAP.get(match['color'], WHITE)
+        # 大文字小文字を無視してマッチした部分だけ色付け
+        pattern = re.escape(s)
+        replacement = f"{color}{s}{RESET}"
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
 
-    # 正規表現の処理
+    # 2) 正規表現の処理：パターンにマッチした範囲だけ色付け
     for match in string_colors.get('regex_matches', []):
-        if re.search(match['pattern'], text):
-            color = COLOR_MAP.get(match['color'], WHITE)
-            return f"{color}{text}{RESET}"
+        pat = match['pattern']
+        color = COLOR_MAP.get(match['color'], WHITE)
+        # グループ化して置換
+        text = re.sub(f"({pat})", lambda m: f"{color}{m.group(1)}{RESET}", text)
 
     return text
 

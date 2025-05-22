@@ -17,7 +17,7 @@ interval: 60
 string_colors:
   # 単純一致の設定
   exact_matches:
-    - string: "/test/"
+    - string: "-test-"
       color: "RED"
     - string: "/area/"
       color: "RED"
@@ -27,10 +27,11 @@ string_colors:
       color: "CYAN"
   
   # 正規表現の設定
-  regex_matches:
-    - pattern: ".*\\.log$"
-      color: "CYAN"
-    - pattern: ".*\\.txt$"
-      color: "MAGENTA"
-    - pattern: ".*\\.csv$"
-      color: "BLUE"
+regex_matches:
+  - pattern: "\\.log"     # ← 末尾$は外す
+    color: "CYAN"
+  - pattern: "\\.txt"
+    color: "MAGENTA"
+  - pattern: "\\.csv"
+    color: "BLUE"
+

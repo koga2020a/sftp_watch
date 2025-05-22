@@ -308,7 +308,7 @@ def main():
                     # Report added directories (only genuinely new ones)
                     for p in sorted(added_dirs):
                         name = p.rstrip('/').split('/')[-1]
-                        base_msg = f"{BLUE}[ADD]{RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
+                        base_msg = f"{BLUE}[ADD] {RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
                         msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(BLUE, '').replace(RESET, ''))
@@ -317,7 +317,7 @@ def main():
                     # Report removed directories (only genuinely removed ones)
                     for p in sorted(removed_dirs):
                         name = p.rstrip('/').split('/')[-1]
-                        base_msg = f"{BLUE}[DEL]{RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
+                        base_msg = f"{BLUE}[DEL] {RESET} {p.replace(name, '')}{BLUE}{name}/{RESET} (directory)"
                         msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(BLUE, '').replace(RESET, ''))
@@ -327,7 +327,7 @@ def main():
                     for p in sorted(added_files):
                         m = current[p]
                         name = p.split('/')[-1]
-                        base_msg = f"{CYAN}[ADD]{RESET} {p.replace(name, '')}{CYAN}{name}{RESET} size={m['size']:,}"
+                        base_msg = f"{CYAN}[ADD] {RESET} {p.replace(name, '')}{CYAN}{name}{RESET} size={m['size']:,}"
                         msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(CYAN, '').replace(RESET, ''))
@@ -337,7 +337,7 @@ def main():
                     for p in sorted(removed_files):
                         m = prev[p]
                         name = p.split('/')[-1]
-                        base_msg = f"{CYAN}[DEL]{RESET} {p.replace(name, '')}{CYAN}{name}{RESET} was size={m['size']:,}"
+                        base_msg = f"{CYAN}[DEL] {RESET} {p.replace(name, '')}{CYAN}{name}{RESET} was size={m['size']:,}"
                         msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(CYAN, '').replace(RESET, ''))
@@ -346,7 +346,7 @@ def main():
                     # Report modified files
                     for p in sorted(updated):
                         name = p.split('/')[-1]
-                        base_msg = f"{ORANGE}[MOD]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} {prev[p]['size']:,} -> {current[p]['size']:,}"
+                        base_msg = f"{ORANGE}[MOD] {RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} {prev[p]['size']:,} -> {current[p]['size']:,}"
                         msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(ORANGE, '').replace(RESET, ''))
@@ -358,7 +358,7 @@ def main():
                         new_time = datetime.fromtimestamp(current[p]['mtime']).strftime('%Y-%m-%d %H:%M:%S')
                         file_size = current[p]['size']
                         name = p.split('/')[-1]
-                        base_msg = f"{ORANGE}[DATEonly]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} size={file_size:,} {old_time} -> {new_time}"
+                        base_msg = f"{ORANGE}[DATE]{RESET} {p.replace(name, '')}{ORANGE}{name}{RESET} size={file_size:,} {old_time} -> {new_time}"
                         msg = apply_color_to_string(base_msg, string_colors) if string_colors else base_msg
                         print(msg)
                         display_messages.append(msg.replace(ORANGE, '').replace(RESET, ''))

@@ -13,6 +13,8 @@
 - パスワード認証とSSH鍵認証のサポート
 - CSVとJSON形式でのログ記録
 - 画面表示と同じ形式のログファイル出力
+- カスタマイズ可能な文字列と色の設定
+- 変更検知時の経過時間表示
 
 ## インストール
 
@@ -27,20 +29,39 @@ pip install paramiko pyyaml
 `config.yaml` ファイルを作成してください：
 
 ```yaml
-host: "12.34.56.78"
+host: "example.com"
 port: 22
-user: "aaa"
-#user: "bbb"
-password: "aaa"           # または下の `pkey_base64`
-#pkey_base64: ""
-auth_type: "password"            # または "pkey"
-#auth_type: "pkey"
-proxy_host: "proxy.test.com"
-proxy_port: 1234
+user: "username"
+password: "your_password"    # または下の `pkey_base64`
+#pkey_base64: ""            # Base64エンコードされた秘密鍵
+auth_type: "password"       # または "pkey"
+proxy_host: "proxy.example.com"
+proxy_port: 8080
 dirs:
-#  - "/export/home/www.kirin.co.jp-test-area/"
-  - "/test/"
+  - "/path/to/watch/"
 interval: 60
+
+# 文字列と色の設定
+string_colors:
+  # 単純一致の設定
+  exact_matches:
+    - string: "-test-"
+      color: "RED"
+    - string: "/area/"
+      color: "RED"
+    - string: "/campaign/"
+      color: "GREEN"
+    - string: "/go/"
+      color: "CYAN"
+  
+  # 正規表現の設定
+  regex_matches:
+    - pattern: "\\.log"
+      color: "CYAN"
+    - pattern: "\\.txt"
+      color: "MAGENTA"
+    - pattern: "\\.csv"
+      color: "BLUE"
 ```
 
 ### 設定パラメータ
@@ -57,17 +78,35 @@ interval: 60
 | `proxy_port` | プロキシサーバーのポート（使用する場合） |
 | `dirs` | 監視するディレクトリのリスト |
 | `interval` | 監視間隔（秒） |
+| `string_colors` | 文字列と色のカスタマイズ設定 |
+
+### 文字列と色の設定
+
+`string_colors`セクションでは、特定の文字列やパターンに色を付けることができます：
+
+- `exact_matches`: 完全一致する文字列に色を付ける
+- `regex_matches`: 正規表現パターンにマッチする文字列に色を付ける
+
+使用可能な色：
+- RED
+- GREEN
+- BLUE
+- YELLOW
+- CYAN
+- MAGENTA
+- WHITE
+- ORANGE
 
 ## 使用方法
 
 ```bash
-python sftp_monitor.py
+python sftp_watch.py
 ```
 
 または別の設定ファイルを指定：
 
 ```bash
-python sftp_monitor.py --config my_config.yaml
+python sftp_watch.py --config my_config.yaml
 ```
 
 ## 実行後の動作
@@ -82,6 +121,7 @@ python sftp_monitor.py --config my_config.yaml
    - 設定された間隔（デフォルト60秒）ごとにディレクトリをスキャン
    - 変更を検出すると、リアルタイムで画面に表示
    - 同時に3種類のログファイルに記録
+   - 前回の変更からの経過時間を表示
 
 3. ログファイルの更新：
    - `log.csv`: 変更が発生するたびに追記
@@ -159,6 +199,8 @@ python sftp_monitor.py --config my_config.yaml
 - ファイルサイズが同じでタイムスタンプのみが変更された場合は [DATEonly] として特別に表示します
 - プロキシ環境下でも動作します
 - 初回の実行時にはディレクトリ構造をツリー形式で表示します
+- カスタマイズ可能な文字列と色の設定により、重要なパスやファイルを視覚的に区別できます
+- 変更検知時に前回からの経過時間を表示します
 
 ## トラブルシューティング
 
@@ -179,3 +221,4 @@ python sftp_monitor.py --config my_config.yaml
 
 - 監視間隔が短すぎると、サーバーに負荷をかける可能性があります
 - 大規模なディレクトリ構造を監視する場合は、初回のスキャンに時間がかかる場合があります
+- 文字列と色の設定は、パフォーマンスに影響を与える可能性があります

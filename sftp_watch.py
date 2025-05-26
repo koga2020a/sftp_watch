@@ -9,6 +9,8 @@ import socket
 import json
 import csv
 import re
+import threading
+import msvcrt
 from paramiko import Transport, SFTPClient, RSAKey
 from stat import S_ISDIR
 from collections import defaultdict
@@ -213,6 +215,29 @@ def get_dir_paths(path_dict):
     """
     return {p.rstrip('/'): True for p in path_dict if path_dict[p]['is_dir']}
 
+def write_memo_log(timestamp, memo):
+    """
+    メモをログファイルに追記する
+    """
+    with open('memo_log.txt', 'a', encoding='utf-8') as f:
+        f.write(f"[{timestamp}] {memo}\n")
+
+def get_user_input():
+    """
+    キーボード入力を監視し、'm'キーが押されたらメモ入力を開始する
+    """
+    while True:
+        if msvcrt.kbhit():
+            key = msvcrt.getch().decode('utf-8').lower()
+            if key == 'm':
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"\n[{now}] メモを入力してください: ", end='', flush=True)
+                memo = input()
+                if memo:
+                    write_memo_log(now, memo)
+                    #print(f"メモを保存しました: {memo}")
+        time.sleep(0.1)
+
 def main():
     args = parse_args()
     cfg_path = args.config or 'config.yaml'
@@ -222,6 +247,10 @@ def main():
     cfg = load_config(cfg_path)
     if isinstance(cfg, dict) and 'default' in cfg:
         cfg = cfg['default']
+
+    # メモ入力用のスレッドを開始
+    input_thread = threading.Thread(target=get_user_input, daemon=True)
+    input_thread.start()
 
     # 文字列と色の設定を取得
     string_colors = cfg.get('string_colors', {})

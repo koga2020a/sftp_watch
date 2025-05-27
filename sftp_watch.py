@@ -465,7 +465,12 @@ def main():
             prev = current
             prev_dirs = current_dirs
             first = False
-            time.sleep(cfg['interval'])
+            
+            # 監視間隔を1秒ずつに分割して、より頻繁にキー入力をチェック
+            for _ in range(cfg['interval']):
+                time.sleep(1)
+                # キー入力チェックは別スレッドで行われているため、
+                # ここでは特に追加の処理は不要です
 
     finally:
         sftp.close()

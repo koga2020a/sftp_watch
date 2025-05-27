@@ -219,8 +219,14 @@ def write_memo_log(timestamp, memo):
     """
     メモをログファイルに追記する
     """
+    # memo_log.txtに追記
     with open('memo_log.txt', 'a', encoding='utf-8') as f:
         f.write(f"[{timestamp}] {memo}\n")
+    
+    # log.csvにも追記
+    with open('log.csv', 'a', newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow([timestamp, 'MEMO', memo])
 
 def get_user_input():
     """

@@ -168,8 +168,29 @@ def print_tree(entries, string_colors=None):
 
     _recurse('', 0)
 
+def ensure_log_directory():
+    """
+    /logディレクトリが存在することを確認し、なければ作成する
+    """
+    log_dir = 'log'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    return log_dir
+
+def get_log_filename():
+    """
+    現在の日付に基づいてログファイル名を生成する
+    """
+    log_dir = ensure_log_directory()
+    today = datetime.now().strftime('%Y%m%d')
+    return os.path.join(log_dir, f'log-{today}.csv')
+
 def write_logs_csv(changes):
-    with open('log.csv', 'a', newline='', encoding='utf-8') as f:
+    """
+    変更をCSVログファイルに追記する
+    """
+    log_file = get_log_filename()
+    with open(log_file, 'a', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         for row in changes:
             w.writerow(row)
@@ -224,7 +245,8 @@ def write_memo_log(timestamp, memo):
         f.write(f"[{timestamp}] {memo}\n")
     
     # log.csvにも追記
-    with open('log.csv', 'a', newline='', encoding='utf-8') as f:
+    log_file = get_log_filename()
+    with open(log_file, 'a', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow([timestamp, 'MEMO', memo])
 

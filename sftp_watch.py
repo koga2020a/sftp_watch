@@ -329,28 +329,35 @@ def main():
     sftp = connect_sftp(cfg)
     print(f"[INFO] Monitoring recursively: {cfg['dirs']} every {cfg['interval']}s")
     print("[INFO] Press 'm' to add a memo")
+    print("[INFO] Press 'q' to quit")
 
     prev = {}
     prev_dirs = {}  # Store directory paths separately
     first = True
     last_change_time = None
+    should_exit = False
 
     # ユーザー入力用のスレッドを開始
     def input_handler():
-        while True:
+        nonlocal should_exit
+        while not should_exit:
             key = get_user_input()
-            if key and key.lower() == 'm':
-                memo = get_memo_input()
-                if memo:
-                    write_memo_log(memo)
-                    print(f"[INFO] メモを保存しました: {memo}")
+            if key:
+                if key.lower() == 'm':
+                    memo = get_memo_input()
+                    if memo:
+                        write_memo_log(memo)
+                        print(f"[INFO] メモを保存しました: {memo}")
+                elif key.lower() == 'q':
+                    print("\n[INFO] プログラムを終了します...")
+                    should_exit = True
 
     input_thread = threading.Thread(target=input_handler)
     input_thread.daemon = True
     input_thread.start()
 
     try:
-        while True:
+        while not should_exit:
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             current = {}
             for d in cfg['dirs']:
@@ -468,9 +475,9 @@ def main():
             
             # 監視間隔を1秒ずつに分割して、より頻繁にキー入力をチェック
             for _ in range(cfg['interval']):
+                if should_exit:
+                    break
                 time.sleep(1)
-                # キー入力チェックは別スレッドで行われているため、
-                # ここでは特に追加の処理は不要です
 
     finally:
         sftp.close()

@@ -253,7 +253,7 @@ def write_memo_log(memo):
     """
     メモをログファイルに書き込む
     """
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now().strftime('%Y%m%d-%H%M%S')
     # memo_log.txtに書き込み
     with open('memo_log.txt', 'a', encoding='utf-8') as f:
         f.write(f"[{now}] {memo}\n")
@@ -266,13 +266,15 @@ def get_memo_input():
     """
     メモ入力を取得する
     """
-    print("\nメモを入力してください（Enterで確定、Escでキャンセル）:")
+    now = datetime.now().strftime('%Y%m%d-%H%M%S')
+    print(f"\n{now}、メモ> ", end='', flush=True)
     memo = []
     while True:
         key = msvcrt.getch()
         if key == b'\r':  # Enter
             break
         elif key == b'\x1b':  # Esc
+            print("\nキャンセルしました")
             return None
         elif key == b'\x08':  # Backspace
             if memo:
@@ -329,6 +331,7 @@ def main():
     sftp = connect_sftp(cfg)
     print(f"[INFO] Monitoring recursively: {cfg['dirs']} every {cfg['interval']}s")
     print("[INFO] Press 'm' to add a memo")
+    print("[INFO] Press 'r' to refresh immediately")
     print("[INFO] Press 'q' to quit")
 
     prev = {}
@@ -336,10 +339,11 @@ def main():
     first = True
     last_change_time = None
     should_exit = False
+    force_refresh = False
 
     # ユーザー入力用のスレッドを開始
     def input_handler():
-        nonlocal should_exit
+        nonlocal should_exit, force_refresh
         while not should_exit:
             key = get_user_input()
             if key:
@@ -348,6 +352,9 @@ def main():
                     if memo:
                         write_memo_log(memo)
                         print(f"[INFO] メモを保存しました: {memo}")
+                elif key.lower() == 'r':
+                    print("\n[INFO] 即時調査を実行します...")
+                    force_refresh = True
                 elif key.lower() == 'q':
                     print("\n[INFO] プログラムを終了します...")
                     should_exit = True
@@ -366,8 +373,12 @@ def main():
             # Extract directory paths from current entries
             current_dirs = get_dir_paths(current)
 
-            if first:
-                print(f"[INFO] Initial scan complete. {len(current)} entries:")
+            if first or force_refresh:
+                if force_refresh:
+                    print(f"\n[INFO] 即時調査実行中... {len(current)} エントリ:")
+                    force_refresh = False
+                else:
+                    print(f"[INFO] Initial scan complete. {len(current)} entries:")
                 print_tree(current, string_colors)
                 print("-"*40)
             else:

@@ -9,8 +9,8 @@ import socket
 import json
 import csv
 import re
-import threading
 import msvcrt
+import threading
 from paramiko import Transport, SFTPClient, RSAKey
 from stat import S_ISDIR
 from collections import defaultdict
@@ -168,29 +168,8 @@ def print_tree(entries, string_colors=None):
 
     _recurse('', 0)
 
-def ensure_log_directory():
-    """
-    /logディレクトリが存在することを確認し、なければ作成する
-    """
-    log_dir = 'log'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    return log_dir
-
-def get_log_filename():
-    """
-    現在の日付に基づいてログファイル名を生成する
-    """
-    log_dir = ensure_log_directory()
-    today = datetime.now().strftime('%Y%m%d')
-    return os.path.join(log_dir, f'log-{today}.csv')
-
 def write_logs_csv(changes):
-    """
-    変更をCSVログファイルに追記する
-    """
-    log_file = get_log_filename()
-    with open(log_file, 'a', newline='', encoding='utf-8') as f:
+    with open('log.csv', 'a', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         for row in changes:
             w.writerow(row)
@@ -236,35 +215,23 @@ def get_dir_paths(path_dict):
     """
     return {p.rstrip('/'): True for p in path_dict if path_dict[p]['is_dir']}
 
-def write_memo_log(timestamp, memo):
-    """
-    メモをログファイルに追記する
-    """
-    # memo_log.txtに追記
-    with open('memo_log.txt', 'a', encoding='utf-8') as f:
-        f.write(f"[{timestamp}] {memo}\n")
-    
-    # log.csvにも追記
-    log_file = get_log_filename()
-    with open(log_file, 'a', newline='', encoding='utf-8') as f:
-        w = csv.writer(f)
-        w.writerow([timestamp, 'MEMO', memo])
-
 def get_user_input():
     """
-    キーボード入力を監視し、'm'キーが押されたらメモ入力を開始する
+    ユーザー入力を取得する関数
+    Windowsコンソールでの文字化けを防ぐため、バイトとして読み取り
     """
-    while True:
-        if msvcrt.kbhit():
-            key = msvcrt.getch().decode('utf-8').lower()
-            if key == 'm':
-                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"\n[{now}] メモを入力してください: ", end='', flush=True)
-                memo = input()
-                if memo:
-                    write_memo_log(now, memo)
-                    #print(f"メモを保存しました: {memo}")
-        time.sleep(0.1)
+    try:
+        key = msvcrt.getch()
+        if key == b'\xe0':  # 特殊キーの場合
+            key = msvcrt.getch()  # 2バイト目を読み取り
+            return None
+        try:
+            return key.decode('cp932')  # Windowsの日本語環境用
+        except UnicodeDecodeError:
+            return key.decode('ascii', errors='ignore')  # フォールバック
+    except Exception as e:
+        print(f"[ERROR] Input error: {e}")
+        return None
 
 def main():
     args = parse_args()
@@ -275,10 +242,6 @@ def main():
     cfg = load_config(cfg_path)
     if isinstance(cfg, dict) and 'default' in cfg:
         cfg = cfg['default']
-
-    # メモ入力用のスレッドを開始
-    input_thread = threading.Thread(target=get_user_input, daemon=True)
-    input_thread.start()
 
     # 文字列と色の設定を取得
     string_colors = cfg.get('string_colors', {})
@@ -313,6 +276,11 @@ def main():
     prev_dirs = {}  # Store directory paths separately
     first = True
     last_change_time = None
+
+    # ユーザー入力用のスレッドを開始
+    input_thread = threading.Thread(target=lambda: None)  # ダミースレッド
+    input_thread.daemon = True
+    input_thread.start()
 
     try:
         while True:
@@ -425,8 +393,6 @@ def main():
                     write_logs_csv(changes)
                     write_display_log(now, display_messages, last_change_time, string_colors)
                     last_change_time = datetime.strptime(now, '%Y-%m-%d %H:%M:%S')
-
-                    write_logs_csv(changes)
 
             write_logs_json(current)
             prev = current

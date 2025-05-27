@@ -169,10 +169,26 @@ def print_tree(entries, string_colors=None):
     _recurse('', 0)
 
 def write_logs_csv(changes):
-    with open('log.csv', 'a', newline='', encoding='utf-8') as f:
-        w = csv.writer(f)
-        for row in changes:
-            w.writerow(row)
+    """
+    変更をCSVファイルに書き込む
+    """
+    # 現在の日付を取得
+    today = datetime.now().strftime('%Y%m%d')
+    
+    # /logディレクトリが存在しない場合は作成
+    log_dir = 'log'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # 日付付きのログファイル名
+    date_log_file = os.path.join(log_dir, f'log-{today}.csv')
+    
+    # 両方のファイルに書き込み
+    for log_file in ['log.csv', date_log_file]:
+        with open(log_file, 'a', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            for row in changes:
+                w.writerow(row)
 
 def format_elapsed_time(seconds):
     if seconds < 60:
@@ -233,6 +249,47 @@ def get_user_input():
         print(f"[ERROR] Input error: {e}")
         return None
 
+def write_memo_log(memo):
+    """
+    メモをログファイルに書き込む
+    """
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # memo_log.txtに書き込み
+    with open('memo_log.txt', 'a', encoding='utf-8') as f:
+        f.write(f"[{now}] {memo}\n")
+    
+    # log.csvと日付付きログファイルにも追記
+    changes = [[now, 'MEMO', memo]]
+    write_logs_csv(changes)
+
+def get_memo_input():
+    """
+    メモ入力を取得する
+    """
+    print("\nメモを入力してください（Enterで確定、Escでキャンセル）:")
+    memo = []
+    while True:
+        key = msvcrt.getch()
+        if key == b'\r':  # Enter
+            break
+        elif key == b'\x1b':  # Esc
+            return None
+        elif key == b'\x08':  # Backspace
+            if memo:
+                memo.pop()
+                sys.stdout.write('\b \b')
+                sys.stdout.flush()
+        else:
+            try:
+                char = key.decode('cp932')
+                memo.append(char)
+                sys.stdout.write(char)
+                sys.stdout.flush()
+            except UnicodeDecodeError:
+                pass
+    print()  # 改行
+    return ''.join(memo)
+
 def main():
     args = parse_args()
     cfg_path = args.config or 'config.yaml'
@@ -271,6 +328,7 @@ def main():
 
     sftp = connect_sftp(cfg)
     print(f"[INFO] Monitoring recursively: {cfg['dirs']} every {cfg['interval']}s")
+    print("[INFO] Press 'm' to add a memo")
 
     prev = {}
     prev_dirs = {}  # Store directory paths separately
@@ -278,7 +336,16 @@ def main():
     last_change_time = None
 
     # ユーザー入力用のスレッドを開始
-    input_thread = threading.Thread(target=lambda: None)  # ダミースレッド
+    def input_handler():
+        while True:
+            key = get_user_input()
+            if key and key.lower() == 'm':
+                memo = get_memo_input()
+                if memo:
+                    write_memo_log(memo)
+                    print(f"[INFO] メモを保存しました: {memo}")
+
+    input_thread = threading.Thread(target=input_handler)
     input_thread.daemon = True
     input_thread.start()
 
